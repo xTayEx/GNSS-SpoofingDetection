@@ -1,6 +1,8 @@
+import os
 import pandas as pd
 import math
 import numpy as np
+import argparse
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
@@ -39,67 +41,42 @@ def process_data(csv_file_path):
     return X, y
 
 
-def train(train_csv_file_path, test_csv_file_path, checkpoint_path=None):
+def train(model, train_csv_file_path, test_csv_file_path):
     train_X, train_y = process_data(train_csv_file_path)
     test_X, test_y = process_data(test_csv_file_path)
-
-    checkpoint_name = ''
-
-    if checkpoint_path is None:
-        model = create_model()
-        model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
-        checkpoint_name = f'gnss_checkpoint_{int(timing()) * 1000}.h5'
-        model.save_weights
-
-
-def main():
-    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-02--08-34-47.csv'
-    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-01--21-13-49.csv'
-    # train_df = pd.read_csv(train_CSV_FILE_PATH)
-    test_df = pd.read_csv(test_CSV_FILE_PATH)
-    # train_values = train_df.to_numpy()
-    # train_times = train_values[:, -1]
-    # train_distance = train_values[:, -2]
-    test_values = test_df.to_numpy()
-    test_times = test_values[:, -1]
-    test_distance = test_values[:, -2]
-    # 将输入特征归一化
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    train_X, train_y = scaler.fit_transform(train_values[:, :-2]), train_distance
-    test_X, test_y = scaler.fit_transform(test_values[:, :-2]), test_distance
-    # # 将四分之三作为训练集
-    # train_len = len(times)
-    # train = values[:train_len, :]
-    # test = values[train_len:, :]
-    # 划分输入（CAN_speed,steering_angel, acceleration_forward）输出（distance)
-    # train_X, train_y = train, distance[:train_len]
-    # test_X, test_y = test, distance[train_len:]
-    # 将输入（X）改造为LSTM的输入格式，即[samples, timesteps, features]
-    train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
-    test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
-
     
-    # fit network
-    history = model.fit(train_X, train_y, epochs=100, batch_size=50, validation_data=(test_X, test_y), verbose=2,
-                        shuffle=False)
-    model.save('lstm.model')
-    # full_X = values[:, :3]
-    # full_X = full_X.reshape((full_X.shape[0], 1, full_X.shape[1]))
-    train_yhat = model.predict(train_X)[:, 0]
-    test_yhat = model.predict(test_X)[:, 0]
-    rmse = math.sqrt(mean_squared_error(test_yhat, test_y))
-    print('Test RMSE: %.3f' % rmse)
+    model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+
+    return model    
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, default='/root/autodl-nas/')
+    parser.add_argument('--test_csv_path', type=str, default='')
+
+    args = parser.parse_args()
+    return args
+
+
+def main(args):
+    data_root = args.data_root
+    test_csv_path = args.test_csv_path
+    chunks = os.listdir(data_root)
+    
+    model = create_model()
+    for chunk in chunks:
+        csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk))
+        for csv in csv_files:
+            model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
+    
     # plot history
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='test')
-    # plt.plot(times, yhat, label='prediction')
-    # plt.plot(times, distance, label="ground_truth")
-    # plt.title('Comparison between truth and prediction', fontsize=18)
-    # plt.xlabel('Boot time (s)', fontsize=18)
-    # plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
     plt.legend()
     plt.savefig('train_result.png')
 
 
 if __name__ == '__main__':
-    main()
+    args = get_args()
+    main(args)
