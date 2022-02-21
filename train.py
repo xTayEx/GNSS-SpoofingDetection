@@ -9,21 +9,57 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
 import tensorflow as tf
+from tqdm import tqdm
+from time import time as timing
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 
+def create_model():
+    # 设计网络
+    model = Sequential()
+    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
+    model.add(Dense(1))
+    # 设置学习率等参数
+    # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    model.compile(loss='mae', optimizer='adam')
+    return model
 
-if __name__ == '__main__':
 
-    train_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
-    test_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
-    train_df = pd.read_csv(train_CSV_FILE_PATH)
+def process_data(csv_file_path):
+    df = pd.read_csv(CSV_FILE_PATH)
+    values = df.to_numpy()
+    times = values[:, -1]
+    distance = values[:, -2]
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    X, y = scaler.fit_transform(values[:, :-2]), distance
+    X = X.reshape((X.shape[0], 1, X.shape[1]))
+
+    return X, y
+
+
+def train(train_csv_file_path, test_csv_file_path, checkpoint_path=None):
+    train_X, train_y = process_data(train_csv_file_path)
+    test_X, test_y = process_data(test_csv_file_path)
+
+    checkpoint_name = ''
+
+    if checkpoint_path is None:
+        model = create_model()
+        model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+        checkpoint_name = f'gnss_checkpoint_{int(timing()) * 1000}.h5'
+        model.save_weights
+
+
+def main():
+    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-02--08-34-47.csv'
+    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-01--21-13-49.csv'
+    # train_df = pd.read_csv(train_CSV_FILE_PATH)
     test_df = pd.read_csv(test_CSV_FILE_PATH)
-    train_values = train_df.to_numpy()
-    train_times = train_values[:, -1]
-    train_distance = train_values[:, -2]
+    # train_values = train_df.to_numpy()
+    # train_times = train_values[:, -1]
+    # train_distance = train_values[:, -2]
     test_values = test_df.to_numpy()
     test_times = test_values[:, -1]
     test_distance = test_values[:, -2]
@@ -42,13 +78,7 @@ if __name__ == '__main__':
     train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
     test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
 
-    # 设计网络
-    model = Sequential()
-    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
-    model.add(Dense(1))
-    # 设置学习率等参数
-    # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-    model.compile(loss='mae', optimizer='adam')
+    
     # fit network
     history = model.fit(train_X, train_y, epochs=100, batch_size=50, validation_data=(test_X, test_y), verbose=2,
                         shuffle=False)
@@ -68,4 +98,8 @@ if __name__ == '__main__':
     # plt.xlabel('Boot time (s)', fontsize=18)
     # plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
     plt.legend()
-    plt.show()
+    plt.savefig('train_result.png')
+
+
+if __name__ == '__main__':
+    main()
