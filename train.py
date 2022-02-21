@@ -17,8 +17,8 @@ for gpu in gpus:
 
 if __name__ == '__main__':
 
-    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
-    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
+    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-02--08-34-47.csv'
+    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-01--21-13-49.csv'
     train_df = pd.read_csv(train_CSV_FILE_PATH)
     test_df = pd.read_csv(test_CSV_FILE_PATH)
     train_values = train_df.to_numpy()
@@ -50,9 +50,8 @@ if __name__ == '__main__':
     # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
     model.compile(loss='mae', optimizer='adam')
     # fit network
-    history = model.fit(train_X, train_y, epochs=100, batch_size=50, validation_data=(test_X, test_y), verbose=2,
-                        shuffle=False)
-    model.save('lstm.model')
+    history = model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+    model.save('gnss_spoofing_detect.h5')
     # full_X = values[:, :3]
     # full_X = full_X.reshape((full_X.shape[0], 1, full_X.shape[1]))
     train_yhat = model.predict(train_X)[:, 0]
