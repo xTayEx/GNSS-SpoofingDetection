@@ -18,10 +18,10 @@ for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 
-def create_model():
+def create_model(input_shape):
     # 设计网络
     model = Sequential()
-    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
+    model.add(LSTM(50, input_shape=input_shape))
     model.add(Dense(1))
     # 设置学习率等参数
     # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -45,7 +45,7 @@ def train(model, train_csv_file_path, test_csv_file_path):
     train_X, train_y = process_data(train_csv_file_path)
     test_X, test_y = process_data(test_csv_file_path)
     
-    model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+    model.fit(train_X, train_y, epochs=1, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
 
     return model    
 
@@ -53,7 +53,7 @@ def train(model, train_csv_file_path, test_csv_file_path):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='/root/autodl-nas/')
-    parser.add_argument('--test_csv_path', type=str, default='')
+    parser.add_argument('--test_csv_path', type=str, default="/root/'99c94dc769b5d96e|2018-11-19--09-56-45.csv'")
 
     args = parser.parse_args()
     return args
