@@ -17,8 +17,8 @@ for gpu in gpus:
 
 if __name__ == '__main__':
 
-    train_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
-    test_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
+    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
+    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
     train_df = pd.read_csv(train_CSV_FILE_PATH)
     test_df = pd.read_csv(test_CSV_FILE_PATH)
     train_values = train_df.to_numpy()
