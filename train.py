@@ -3,6 +3,7 @@ import pandas as pd
 import math
 import numpy as np
 import argparse
+from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
@@ -57,6 +58,7 @@ def train(model, train_csv_file_path, test_csv_file_path):
 
 def get_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--data_root', type=str, default='/root/autodl-nas/')
     parser.add_argument('--test_csv_path', type=str, default="/root/99c94dc769b5d96e|2018-07-10--10-01-44.csv")
 
@@ -65,18 +67,21 @@ def get_args():
 
 
 def main(args):
+    epochs = args.epochs
     data_root = args.data_root
     test_csv_path = args.test_csv_path
     chunks = os.listdir(data_root)
     
     model = create_model((1, 3))
-    for chunk in chunks:
-        chunk_path = os.path.join(data_root, chunk)
-        csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
-        for csv in csv_files:
-            print(f'csv file is {csv}')
-            model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
+    for epoch in tqdm(range(epochs)):
+        for chunk in chunks:
+            chunk_path = os.path.join(data_root, chunk)
+            csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
+            for csv in csv_files:
+                print(f'csv file is {csv}')
+                model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
     
+    model.save('lstm_all_data.h5')
     # plot history
     # plt.plot(history.history['loss'], label='train')
     # plt.plot(history.history['val_loss'], label='test')
