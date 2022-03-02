@@ -27,12 +27,11 @@ def get_args():
 
 
 def main():
-    actual_distance = np.array() # calculated from IMU data, odometer data, etc.    
     GNSS_ERROR = 10
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    csv_file_path = '/root/autodl-nas/Chunk_03/99c94dc769b5d96e|2018-05-01--08-13-53.csv'
+    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv'
     df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
@@ -48,7 +47,7 @@ def main():
     yhat = model.predict(test_X)[:, 0]
     
     for idx, y_predict_point in enumerate(yhat):
-        if abs(y_predict_point - actual_distance[idx]) > SPOOFING_THRESHOLD:
+        if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
             print('>>> WARNING! <<<')
             print(f'GNSS SPOOFING OCCURED AT {idx}')
 

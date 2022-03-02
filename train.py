@@ -3,7 +3,7 @@ import math
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Masking
 from keras.layers import LSTM
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
@@ -13,6 +13,9 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
+
+def train(model, train_csv_file_path, test_csv_file_path):
+    pass
 
 
 if __name__ == '__main__':
@@ -44,7 +47,7 @@ if __name__ == '__main__':
 
     # 设计网络
     model = Sequential()
-    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
+    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2],)))
     model.add(Dense(1))
     # 设置学习率等参数
     # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
