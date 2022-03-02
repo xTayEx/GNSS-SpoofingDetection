@@ -22,7 +22,7 @@ for gpu in gpus:
 def create_model(input_shape):
     # 设计网络
     model = Sequential()
-    model.add(Masking(mask_value=-1, input_shape=input_shape))
+    model.add(Masking(mask_value=0, input_shape=input_shape))
     model.add(LSTM(50, input_shape=input_shape))
     model.add(Dense(1))
     # 设置学习率等参数
@@ -58,7 +58,7 @@ def get_args():
     parser.add_argument('--test_csv_path', type=str, default="/root/'99c94dc769b5d96e|2018-11-19--09-56-45.csv'")
 
     args = parser.parse_args()
-    return args
+    return argss
 
 
 def main(args):
@@ -66,7 +66,7 @@ def main(args):
     test_csv_path = args.test_csv_path
     chunks = os.listdir(data_root)
     
-    model = create_model()
+    model = create_model(())
     for chunk in chunks:
         csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk))
         for csv in csv_files:
