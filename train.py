@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.preprocessing.sequence import pad_sequences
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
@@ -21,6 +22,7 @@ for gpu in gpus:
 def create_model(input_shape):
     # 设计网络
     model = Sequential()
+    model.add(Masking(mask_value=-1, input_shape=input_shape))
     model.add(LSTM(50, input_shape=input_shape))
     model.add(Dense(1))
     # 设置学习率等参数
@@ -37,7 +39,7 @@ def process_data(csv_file_path):
     scaler = MinMaxScaler(feature_range=(0, 1))
     X, y = scaler.fit_transform(values[:, :-2]), distance
     X = X.reshape((X.shape[0], 1, X.shape[1]))
-
+    X = pad_sequences(X, maxlen=37195)
     return X, y
 
 
