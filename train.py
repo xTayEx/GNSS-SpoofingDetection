@@ -6,6 +6,7 @@ import argparse
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.layers import Masking
 from keras.layers import LSTM
 from keras.preprocessing.sequence import pad_sequences
 from sklearn.metrics import mean_squared_error
@@ -22,7 +23,7 @@ for gpu in gpus:
 def create_model(input_shape):
     # 设计网络
     model = Sequential()
-    model.add(Masking(mask_value=0, input_shape=input_shape))
+    # model.add(Masking(mask_value=0, input_shape=input_shape))
     model.add(LSTM(50, input_shape=input_shape))
     model.add(Dense(1))
     # 设置学习率等参数
@@ -32,14 +33,16 @@ def create_model(input_shape):
 
 
 def process_data(csv_file_path):
-    df = pd.read_csv(CSV_FILE_PATH)
+    df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
     distance = values[:, -2]
     scaler = MinMaxScaler(feature_range=(0, 1))
     X, y = scaler.fit_transform(values[:, :-2]), distance
+    # X = pad_sequences(X, maxlen=37195)
     X = X.reshape((X.shape[0], 1, X.shape[1]))
-    X = pad_sequences(X, maxlen=37195)
+    # print(X.shape)
+    # print(X)
     return X, y
 
 
@@ -55,10 +58,10 @@ def train(model, train_csv_file_path, test_csv_file_path):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default='/root/autodl-nas/')
-    parser.add_argument('--test_csv_path', type=str, default="/root/'99c94dc769b5d96e|2018-11-19--09-56-45.csv'")
+    parser.add_argument('--test_csv_path', type=str, default="/root/99c94dc769b5d96e|2018-07-10--10-01-44.csv")
 
     args = parser.parse_args()
-    return argss
+    return args
 
 
 def main(args):
@@ -66,17 +69,19 @@ def main(args):
     test_csv_path = args.test_csv_path
     chunks = os.listdir(data_root)
     
-    model = create_model(())
+    model = create_model((1, 3))
     for chunk in chunks:
-        csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk))
+        chunk_path = os.path.join(data_root, chunk)
+        csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
         for csv in csv_files:
+            print(f'csv file is {csv}')
             model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
     
     # plot history
-    plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='test')
-    plt.legend()
-    plt.savefig('train_result.png')
+    # plt.plot(history.history['loss'], label='train')
+    # plt.plot(history.history['val_loss'], label='test')
+    # plt.legend()
+    # plt.savefig('train_result.png')
 
 
 if __name__ == '__main__':
