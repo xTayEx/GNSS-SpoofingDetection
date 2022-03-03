@@ -14,6 +14,7 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
 import tensorflow as tf
+import requests
 from tqdm import tqdm
 from time import time as timing
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -58,7 +59,8 @@ def train(model, train_csv_file_path, test_csv_file_path):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--shutdown', action='store_true')
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--data_root', type=str, default='/root/autodl-nas/')
     parser.add_argument('--test_csv_path', type=str, default="/root/99c94dc769b5d96e|2018-07-10--10-01-44.csv")
 
@@ -82,6 +84,7 @@ def main(args):
                 model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
     
     model.save('lstm_all_data.h5')
+
     # plot history
     # plt.plot(history.history['loss'], label='train')
     # plt.plot(history.history['val_loss'], label='test')
@@ -91,4 +94,27 @@ def main(args):
 
 if __name__ == '__main__':
     args = get_args()
-    main(args)
+    print(args)
+    try:
+        main(args)
+    except Exception as e:
+        resp = requests.post('https://www.autodl.com/api/v1/wechat/message/push', json={
+            'token': '9ae892707a79',
+            'title': 'Exception',
+            'name': 'GNSS Spoofing Detection',
+            'content': str(e)
+        })
+
+    else:
+        success_content = 'Done!'
+        if args.shutdown:
+            success_content += ' Server will be shutdown in 1 min...'
+        
+        resp = requests.post('https://www.autodl.com/api/v1/wechat/message/push', json={
+            'token': '9ae892707a79',
+            'title': 'Success',
+            'name': 'GNSS Spoofing Detection',
+            'content': 'Done'
+        })
+        if args.shutdown:
+            os.system('shutdown +1')

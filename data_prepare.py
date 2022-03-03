@@ -2,7 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import pyproj
+from tqdm import tqdm
 from scipy.interpolate import make_interp_spline
+import argparse
 import math
 import matplotlib.pyplot as plt
 # a = 6378137
@@ -105,14 +107,21 @@ def getDistance(lat1, lng1, lat2, lng2):
         res.append(s)
     return res
 
-if __name__ == '__main__':
+def getargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--route_index', type=int, default=0)
+    parser.add_argument('--chunk_index', type=int, default=0)
+    args = parser.parse_args()
+    return args
 
+if __name__ == '__main__':
+    args = getargs()
     # 用于GNSS坐标转化
     position_transformer = pyproj.Transformer.from_crs(
                 {"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                 {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'},
             )
-    dataset_directory = 'D:\comma2k19'
+    dataset_directory = '/root/autodl-nas/'
     chunk_set = []
     for chunk in os.listdir(dataset_directory):
         # 忽略生成的csv文件
@@ -127,17 +136,17 @@ if __name__ == '__main__':
     # 将序号小的片段放在前面
     chunk_set.sort()
     # 选一个chunk来训练（200分钟）
-    chunk_index = 0
+    chunk_index = args.chunk_index
     route_set = []
-    for route_id in os.listdir(chunk_set[chunk_index]):
+    for route_id in tqdm(os.listdir(chunk_set[chunk_index])):
         # 忽略生成的csv文件
         if ".csv" in route_id:
             continue
         route_set.append(os.path.join(chunk_set[chunk_index], route_id))
     segment_set = []
     # 选一个路段训练
-    route_index = 9
-    for segment in os.listdir(route_set[route_index]):
+    route_index = args.route_index
+    for segment in tqdm(os.listdir(route_set[route_index])):
         # 如果序号为单个时在前补零，以便后面排序
         if len(segment) == 1:
             used_name = segment
@@ -153,13 +162,14 @@ if __name__ == '__main__':
     CAN_speeds = []
     steering_angles = []
     acceleration_forward = []
-    for main_dir in segment_set:
+    for main_dir in tqdm(segment_set):
+        print(main_dir)
         # 导入GNSS的时间和位置(pose)并将位置转化为经纬度
-        temp_GNSS_time = np.load(main_dir + '\\global_pose\\frame_times')
+        temp_GNSS_time = np.load(main_dir + '/global_pose/frame_times')
         times = np.append(times, temp_GNSS_time)
         # 打印每一段的长度
         print(len(temp_GNSS_time))
-        positions = np.load(main_dir + '\\global_pose\\frame_positions')
+        positions = np.load(main_dir + '/global_pose/frame_positions')
         positions = position_transformer.transform(positions[:, 0], positions[:, 1], positions[:, 2], radians=False)
         lats = np.append(lats, positions[1])
         lons = np.append(lons, positions[0])
@@ -168,24 +178,24 @@ if __name__ == '__main__':
         # lats = np.append(lats, positions[:, 0])
         # lons = np.append(lons, positions[:, 1])
         # 暂时不用orientation
-        # orientation = np.load(main_dir + '\\global_pose\\frame_orientations')
-        # orientations = np.append(orientations, np.load(main_dir + '\\global_pose\\frame_orientations'))
-        temp_CAN_times = np.load(main_dir + '\\processed_log\\CAN\\speed\\t')
+        # orientation = np.load(main_dir + '/global_pose/frame_orientations')
+        # orientations = np.append(orientations, np.load(main_dir + '/global_pose/frame_orientations'))
+        temp_CAN_times = np.load(main_dir + '/processed_log/CAN/speed/t')
         # 确保时间无重复值
         temp_CAN_speed_times = unique(temp_CAN_times)
         # 对CAN数据按照GNSS参考时间插值
-        temp_CAN_speeds = make_interp_spline(temp_CAN_speed_times, np.load(main_dir + '\\processed_log\\CAN\\speed\\value'))(temp_GNSS_time).flatten()
+        temp_CAN_speeds = make_interp_spline(temp_CAN_speed_times, np.load(main_dir + '/processed_log/CAN/speed/value'))(temp_GNSS_time).flatten()
         CAN_speeds = np.append(CAN_speeds, temp_CAN_speeds)
         # CAN_angles_times和CAN_speed_times有时不一致
-        temp_CAN_angles_times = np.load(main_dir + '\\processed_log\\CAN\\steering_angle\\t')
-        temp_steering_angles = np.load(main_dir + '\\processed_log\\CAN\\steering_angle\\value')
+        temp_CAN_angles_times = np.load(main_dir + '/processed_log/CAN/steering_angle/t')
+        temp_steering_angles = np.load(main_dir + '/processed_log/CAN/steering_angle/value')
         temp_CAN_angles_times = unique(temp_CAN_angles_times)
         temp_steering_angles = make_interp_spline(temp_CAN_angles_times, temp_steering_angles)(temp_GNSS_time)
         steering_angles = np.append(steering_angles, temp_steering_angles)
         # 对IMU数据按照GNSS参考时间插值
-        temp_IMU_times = np.load(main_dir + '\\processed_log\\IMU\\accelerometer\\t')
+        temp_IMU_times = np.load(main_dir + '/processed_log/IMU/accelerometer/t')
         temp_acceleration_forward = make_interp_spline(temp_IMU_times, np.load(main_dir +
-                                '\\processed_log\\IMU\\accelerometer\\value')[:, 0])(temp_GNSS_time)
+                                '/processed_log/IMU/accelerometer/value')[:, 0])(temp_GNSS_time)
         acceleration_forward = np.append(acceleration_forward, temp_acceleration_forward)
 
     DataSet = list(zip(times, lats, lons, CAN_speeds, steering_angles, acceleration_forward))
@@ -208,10 +218,10 @@ if __name__ == '__main__':
     # for i in distance:
     #     if i > 100:
     #         print(i)
-    plt.plot(times[:-1], distance)
-    plt.xlabel('Boot time (s)', fontsize=18)
-    plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
-    plt.show()
+ #   plt.plot(times[:-1], distance)
+ #   plt.xlabel('Boot time (s)', fontsize=18)
+ #   plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
+ #   plt.show()
     # 将合并的数据集保存到.csv文件中
     reframed.to_csv(route_set[route_index]+".csv", index=False, sep=',')
 
