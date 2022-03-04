@@ -24,7 +24,7 @@ if __name__ == '__main__':
     values = df.to_numpy()
     times = values[:, -1]
     distance = values[:, -2]
-    model = tf.keras.models.load_model('lstm.model')
+    model = tf.keras.models.load_model('lstm_all_data.h5')
     test_X = values[:, :3]
     # 因为训练的时候输入特征是归一化的，所以预测的时候也要将输入特征归一化
     scaler = MinMaxScaler(feature_range=(0, 1))
