@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score
 gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     plt.savefig('eval.png')
     min = min((distance - yhat), key=abs)
     max = max((distance - yhat), key=abs)
-    avr = average(distance-yhat)
+    avr = average(distance - yhat)
     print('Min:%f' % min)
     print('Max:%f' % max)
     print('average:%f' % avr)
