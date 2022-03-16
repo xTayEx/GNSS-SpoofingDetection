@@ -27,11 +27,11 @@ def get_args():
 
 
 def main():
-    GNSS_ERROR = 10
+    GNSS_ERROR = 1.5
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' # 用于测试的数据集，来自commaai的comma2k19数据集
+    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' 
     df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
