@@ -31,7 +31,7 @@ def main():
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv'
+    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' # 用于测试的数据集，来自commaai的comma2k19数据集
     df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
@@ -50,6 +50,7 @@ def main():
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
             print('>>> WARNING! <<<')
             print(f'GNSS SPOOFING OCCURED AT {idx}')
+            input()
 
     # print(f'Test MAE: {mae}')
     # scores = model.evaluate(test_X, test_y)
