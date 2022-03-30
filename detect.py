@@ -36,7 +36,7 @@ def main():
     values = df.to_numpy()
     times = values[:, -1]
     distance = values[:, -2]
-    model = tf.keras.models.load_model('gnss_spoofing_detect.h5')
+    model = tf.keras.models.load_model('lstm_all_data.h5')
     test_X = values[:, :3]
 
     scaler = MinMaxScaler(feature_range=(0, 1))
