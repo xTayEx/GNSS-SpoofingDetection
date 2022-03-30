@@ -9,9 +9,7 @@ from time import time as timing
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
+gpus = None
 
 
 def average(seq, total=0.0):
@@ -25,14 +23,21 @@ def average(seq, total=0.0):
 def get_args():
     parser = argparse.ArgumentParser()
 
+def detect_init():
+    global gpus
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
 
-def detect():
+
+def detect(conn):
     GNSS_ERROR = 1.5
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' 
-    df = pd.read_csv(csv_file_path)
+    # csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' 
+    # df = pd.read_csv(csv_file_path)
+    df = conn.recv()
     values = df.to_numpy()
     times = values[:, -1]
     distance = values[:, -2]
@@ -48,22 +53,8 @@ def detect():
     
     for idx, y_predict_point in enumerate(yhat):
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
-            print('>>> WARNING! <<<')
-            print(f'GNSS SPOOFING OCCURED AT {idx}')
-            input()
-
-    # print(f'Test MAE: {mae}')
-    # scores = model.evaluate(test_X, test_y)
-
-    # plt.plot(times, yhat, label='prediction')
-    # plt.plot(times, distance, label='round_truth')
-    # plt.title('Comparison between truth and prediction', fontsize=18)
-    # plt.xlabel('Boot time (s)', fontsize=18)
-    # plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
-    # plt.legend()
-    # plt.savefig('eval.png')
+            # print('>>> WARNING! <<<')
+            # print(f'GNSS SPOOFING OCCURED AT {idx}')
+            # input()
+            pass
     
-
-
-if __name__ == '__main__':
-    main()

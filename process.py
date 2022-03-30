@@ -1,11 +1,16 @@
-import pynmea2
 import io
-import serial
-from datetime import datetime, timezone, timedelta
-import time
-import math
 import json
+import math
 import os
+import time
+from datetime import datetime, timedelta, timezone
+from multiprocessing import Pipe, Process
+
+import pynmea2
+import serial
+
+from detect import detect, detect_init
+
 ser = serial.Serial('/dev/ttyS1', 4800, timeout=5.0)
 #sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 referredtime = datetime.datetime.utcnow()
@@ -39,7 +44,11 @@ def getDistance(lat1, lng1, lat2, lng2):
 # 提取数据
 # 打包成字典
 # 写入Json
-def process():
+def main():
+    detect_init()
+    parent_conn, child_conn = Pipe()
+    detect_process = Process(target=detect, args=(child_conn,))
+    detect_process.start()
     # 考虑到需要经计算距离，那么就需要两条数据才能计算，所以偶数的时候计算距离获取时间差，奇数的时候提取经纬度
     count = 0
     countdown = CLOCKCYCLE
@@ -57,7 +66,6 @@ def process():
             if line.startswith('$GPRMC'):
                 line = line.replace('\\r\\n\'', '')
                 msg = pynmea2.parse(line)
-                # print(repr(msg))
                 if msg.status == "A":
                     # 单位从“度分”转化为“度”
                     if count % 2 == 1:
@@ -86,18 +94,20 @@ def process():
                                            (a-referredtime).microseconds*0.000001, 1)
                         # 计算距离
                         dis = getDistance(latitude1, longtitude1, latitude2, longtitude2)
-                        tuple_dict = {'distance': dis,
-                                      'time': time_delta
-                                      }
+                        tuple_dict = {
+                            'distance': dis,
+                            'time': time_delta
+                        }
                         json_str = json.dumps(tuple_dict)
-                        file_name = str(cyclecount)+'.json'
-                        if(os.path.exists(file_name)):
-                            with open('test_data.json', 'w') as json_file:
-                                json_file.write(json_str)
-                        else:
-                            os.makedirs(file_name)
-                            with open('test_data.json', 'w') as json_file:
-                                json_file.write(json_str)
+                        parent_conn.send(json_str)
+                        # file_name = str(cyclecount)+'.json'
+                        # if(os.path.exists(file_name)):
+                        #     with open('test_data.json', 'a') as json_file:
+                        #         json_file.write(json_str)
+                        # else:
+                        #     os.makedirs(file_name)
+                        #     with open('test_data.json', 'w') as json_file:
+                        #         json_file.write(json_str)
                         countdown -= 1
         except serial.SerialException as e:
             print('Device error: {}'.format(e))
@@ -105,3 +115,8 @@ def process():
         except pynmea2.ParseError as e:
             print('Parse error: {}'.format(e))
             continue
+
+        detect_process.join()
+
+if __name__ == '__main__':
+    main()
