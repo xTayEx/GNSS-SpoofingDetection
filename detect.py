@@ -26,7 +26,7 @@ def get_args():
     parser = argparse.ArgumentParser()
 
 
-def main():
+def detect():
     GNSS_ERROR = 1.5
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
