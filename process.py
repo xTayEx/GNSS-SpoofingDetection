@@ -5,15 +5,10 @@ import math
 import os
 import time
 from datetime import datetime, timedelta, timezone
-from multiprocessing import Pipe, Process
 
 import pynmea2
 
-from detect import detect, detect_init
 
-#ser = serial.Serial('/dev/ttyS1', 4800, timeout=5.0)
-#sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
-# referredtime=datetime.datetime.utcnow()
 EARTH_REDIUS = 6378.137
 CLOCKCYCLE = 2000
 
@@ -45,25 +40,23 @@ def getDistance(lat1, lng1, lat2, lng2):
 # 打包成字典
 # 写入Json
 def process():
-    detect_init()
-    parent_conn, child_conn = Pipe()
-    detect_process = Process(target=detect, args=(child_conn,))
-    detect_process.start()
 
     count = 0
     f = open(r"test/NMEA1083.txt")
     line = f.readline()
     file_name = r"test/test.csv"
-    csvfile = open(file_name, 'w', encoding='utf-8', newline="")
-    writer = csv.writer(csvfile)
-    writer.writerow(["distance", "time"])
+    des_csvfile = open(file_name, 'w', encoding='utf-8', newline="")
+    spoofing_csvfile = open("/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-06--10-04-53.csv")
+    writer = csv.writer(des_csvfile, delimiter=',')
+    reader = csv.reader(spoofing_csvfile, delimiter=',')
+    next(reader)
+    writer.writerow(["CAN_speeds(t-1)", "steering_angles(t-1)", "acceleration_forward(t-1)", "distance", "times"])
     while line != "":
         try:
             count += 1
             if line.startswith('$GPRMC'):
                 #line = line.replace('\\r\\n\'', '')
                 msg = pynmea2.parse(line)
-                # print(repr(msg))
                 if msg.status == "A":
                     # 单位从“度分”转化为“度”
                     if count % 2 == 1:
@@ -75,17 +68,23 @@ def process():
                         longtitude2 = int(float(msg.lon) / 100) + (float(msg.lon) / 100 - int(float(msg.lon) / 100)) * 100 / 60
                         time = msg.timestamp
                         # 转化成datetime对象
-                        # 转化成北京时间,这些转换可能用不到，但是先写下来
-                        # a=a.replace(tzinfo=timezone.utc)
-                        # tzutc_8=timezone(timedelta(hours=8))
-                        # localtime=a.astimezone(tzutc_8)
+                        # 转化成北京时间
                         # 计算从程序开始运行的时间与接收到GPS信号传回的时间差,精确到小数点后一位，以此作为传递的参数
                         # 计算距离
                         dis = getDistance(latitude1, longtitude1, latitude2, longtitude2)
-                        with open('test.csv', 'w') as csvfile:
-                            writer.writerow([dis, time])
+                        fields = next(reader)
+                        can, angle, accelerate = fields[0], fields[1], fields[2]
+
+                        writer.writerow([can, angle, accelerate, dis, time])
             line = f.readline()
         except pynmea2.ParseError as e:
             print('Parse error: {}'.format(e))
             break
+
+    
     f.close()
+    des_csvfile.close()
+    spoofing_csvfile.close()
+
+if __name__ == '__main__':
+    process()

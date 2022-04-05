@@ -30,14 +30,13 @@ def detect_init():
         tf.config.experimental.set_memory_growth(gpu, True)
 
 
-def detect(conn):
+def detect():
     GNSS_ERROR = 1.5
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    # csv_file_path = 'spoofing/99c94dc769b5d96e|2018-11-19--09-56-45.csv' 
-    # df = pd.read_csv(csv_file_path)
-    df = conn.recv()
+    csv_file_path = 'test/test.csv' 
+    df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
     distance = values[:, -2]
@@ -53,8 +52,10 @@ def detect(conn):
     
     for idx, y_predict_point in enumerate(yhat):
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
-            # print('>>> WARNING! <<<')
-            # print(f'GNSS SPOOFING OCCURED AT {idx}')
-            # input()
-            pass
+            print('>>> WARNING! <<<')
+            print(f'GNSS SPOOFING OCCURED AT {idx}')
+            input()
     
+if __name__ == '__main__':
+    detect_init()
+    detect()
