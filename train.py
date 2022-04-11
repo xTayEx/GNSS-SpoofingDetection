@@ -13,6 +13,7 @@ from keras.preprocessing.sequence import pad_sequences
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
+from keras.utils.vis_utils import plot_model
 import tensorflow as tf
 import requests
 from tqdm import tqdm
@@ -70,6 +71,11 @@ def main(args):
     chunks = os.listdir(data_root)
     
     model = create_model((1, 3))
+    model.summary()
+    try:
+        plot_model(model, to_file='LSTM.eps', show_shapes=True)
+    except Exception as e:
+        print(str(e))
     for epoch in tqdm(range(epochs)):
         for chunk in chunks:
             chunk_path = os.path.join(data_root, chunk)
