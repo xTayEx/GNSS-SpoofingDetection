@@ -47,9 +47,9 @@ def train(model, train_csv_file_path, test_csv_file_path):
     train_X, train_y = process_data(train_csv_file_path)
     test_X, test_y = process_data(test_csv_file_path)
     
-    model.fit(train_X, train_y, epochs=1, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+    history = model.fit(train_X, train_y, epochs=1, batch_size=64, validation_data=(test_X, test_y), verbose=2, shuffle=False)
 
-    return model    
+    return model, history    
 
 
 def get_args():
@@ -69,22 +69,31 @@ def main(args):
     test_csv_path = args.test_csv_path
     chunks = os.listdir(data_root)
     
+    loss = []
+    val_loss = []
     model = create_model((1, 3))
     for epoch in tqdm(range(epochs)):
         for chunk in chunks:
             chunk_path = os.path.join(data_root, chunk)
+            if not os.path.isdir(chunk_path):
+                print(f'{chunk_path} is not dir!')
+                continue
             csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
             for csv in csv_files:
                 print(f'csv file is {csv}')
-                model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
-    
+                model, history = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
+                loss += history.history['loss']
+                val_loss += history.history['val_loss']
+
+    print(loss)
+    print(val_loss)
     model.save('lstm_all_data.h5')
 
     # plot history
-    # plt.plot(history.history['loss'], label='train')
-    # plt.plot(history.history['val_loss'], label='test')
-    # plt.legend()
-    # plt.savefig('train_result.png')
+    plt.plot(loss, label='train')
+    plt.plot(val_loss, label='test')
+    plt.legend()
+    plt.savefig('train_result.png')
 
 
 if __name__ == '__main__':
