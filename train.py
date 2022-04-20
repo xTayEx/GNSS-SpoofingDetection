@@ -13,7 +13,7 @@ from keras.preprocessing.sequence import pad_sequences
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
-from keras.utils.vis_utils import plot_model
+from keras.utils.vis_utils import plot_model, model_to_dot
 import tensorflow as tf
 import requests
 from tqdm import tqdm
@@ -73,6 +73,8 @@ def main(args):
     model = create_model((1, 3))
     model.summary()
     try:
+        dot = model_to_dot(model, show_shapes=True)
+        dot.write_raw('LSTM.dot')
         plot_model(model, to_file='LSTM.eps', show_shapes=True)
     except Exception as e:
         print(str(e))
@@ -80,8 +82,7 @@ def main(args):
         for chunk in chunks:
             chunk_path = os.path.join(data_root, chunk)
             csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
-            for csv in csv_files:
-                print(f'csv file is {csv}')
+            for csv in csv_files: print(f'csv file is {csv}')
                 model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
     
     model.save('lstm_all_data.h5')

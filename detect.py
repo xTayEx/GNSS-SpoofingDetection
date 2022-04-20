@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import logging
 from time import time as timing
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
 gpus = None
-
+logging.basicConfig(filename='debug.log', level=logging.WARNING)
 
 def average(seq, total=0.0):
     num = 0
@@ -35,7 +36,7 @@ def detect():
     LSTM_PREDICT_ERROR = 0.058002
     SPOOFING_THRESHOLD = GNSS_ERROR + LSTM_PREDICT_ERROR 
 
-    csv_file_path = 'test/test.csv' 
+    csv_file_path = 'test_spoofing.csv' 
     df = pd.read_csv(csv_file_path)
     values = df.to_numpy()
     times = values[:, -1]
@@ -54,7 +55,8 @@ def detect():
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
             print('>>> WARNING! <<<')
             print(f'GNSS SPOOFING OCCURED AT {idx}')
-            input()
+            logging.warning(f'[WARN] GNSS SPOOFING OCCURED AT {idx}. Distance is {distance[idx]}')
+
     
 if __name__ == '__main__':
     detect_init()
