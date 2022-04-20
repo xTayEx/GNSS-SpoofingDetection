@@ -17,11 +17,12 @@ for gpu in gpus:
 
 if __name__ == '__main__':
 
-    train_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
-    test_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
+    train_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-02--08-34-47.csv'
+    test_CSV_FILE_PATH = '/root/autodl-nas/Chunk_01/b0c9d2329ad1606b|2018-08-01--21-13-49.csv'
     train_df = pd.read_csv(train_CSV_FILE_PATH)
     test_df = pd.read_csv(test_CSV_FILE_PATH)
-    train_values = train_df.to_numpy() train_times = train_values[:, -1]
+    train_values = train_df.to_numpy() 
+    train_times = train_values[:, -1]
     train_distance = train_values[:, -2]
     test_values = test_df.to_numpy()
     test_times = test_values[:, -1]
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
     model.compile(loss='mae', optimizer='adam')
     # fit network
-    history = model.fit(train_X, train_y, epochs=100, batch_size=50, validation_data=(test_X, test_y), verbose=2,
+    history = model.fit(train_X, train_y, epochs=100, batch_size=64, validation_data=(test_X, test_y), verbose=2,
                         shuffle=False)
     model.save('lstm.model')
     # full_X = values[:, :3]
@@ -61,10 +62,14 @@ if __name__ == '__main__':
     # plot history
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='test')
-    # plt.plot(times, yhat, label='prediction')
-    # plt.plot(times, distance, label="ground_truth")
-    # plt.title('Comparison between truth and prediction', fontsize=18)
-    # plt.xlabel('Boot time (s)', fontsize=18)
-    # plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
     plt.legend()
-    plt.show()
+    plt.savefig('train_loss.eps')
+
+    plt.clf()
+
+    plt.plot(times, yhat, label='prediction')
+    plt.plot(times, distance, label="ground_truth")
+    plt.title('Comparison between truth and prediction')
+    plt.xlabel('time(s)')
+    plt.ylabel('Distance(m)')
+    plt.savefig('comparison.eps')
