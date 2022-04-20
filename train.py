@@ -21,8 +21,7 @@ if __name__ == '__main__':
     test_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
     train_df = pd.read_csv(train_CSV_FILE_PATH)
     test_df = pd.read_csv(test_CSV_FILE_PATH)
-    train_values = train_df.to_numpy()
-    train_times = train_values[:, -1]
+    train_values = train_df.to_numpy() train_times = train_values[:, -1]
     train_distance = train_values[:, -2]
     test_values = test_df.to_numpy()
     test_times = test_values[:, -1]

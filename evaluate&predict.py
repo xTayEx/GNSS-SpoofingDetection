@@ -16,7 +16,7 @@ def average(seq, total=0.0):
 
 if __name__ == '__main__':
 
-    CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_03\\99c94dc769b5d96e_2018-05-01--08-13-53.csv'
+    CSV_FILE_PATH = '/root/autodl-nas/99c94dc769b5d96e_2018-05-01--08-13-53.csv'
     df = pd.read_csv(CSV_FILE_PATH)
     values = df.to_numpy()
     times = values[:, -1]
