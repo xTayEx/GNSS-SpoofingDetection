@@ -62,14 +62,16 @@ if __name__ == '__main__':
     # plot history
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='test')
+    plt.xlabel('epoch')
+    plt.ylabel('loss/val_loss')
     plt.legend()
     plt.savefig('train_loss.eps')
 
-    plt.clf()
+    # plt.clf()
 
-    plt.plot(times, yhat, label='prediction')
-    plt.plot(times, distance, label="ground_truth")
-    plt.title('Comparison between truth and prediction')
-    plt.xlabel('time(s)')
-    plt.ylabel('Distance(m)')
-    plt.savefig('comparison.eps')
+    # plt.plot(times, yhat, label='prediction')
+    # plt.plot(times, distance, label="ground_truth")
+    # plt.title('Comparison between truth and prediction')
+    # plt.xlabel('time(s)')
+    # plt.ylabel('Distance(m)')
+    # plt.savefig('comparison.eps')
