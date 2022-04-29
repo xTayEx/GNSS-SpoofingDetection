@@ -55,7 +55,10 @@ def detect():
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
             print('>>> WARNING! <<<')
             print(f'GNSS SPOOFING OCCURED AT {idx}')
-            logging.warning(f'[WARN] GNSS SPOOFING OCCURED AT {idx}. Distance is {distance[idx]}')
+            logging.warning(f'[WARN] GNSS SPOOFING OCCURED AT {idx}. distance: {distance[idx]}, y_p: {y_predict_point}, diff: {distance[idx] - y_predict_point}')
+        else:
+            logging.warning(f'{idx}. distance: {distance[idx]}, y_p: {y_predict_point}, diff: {distance[idx] - y_predict_point}')
+
 
     
 if __name__ == '__main__':

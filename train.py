@@ -25,9 +25,10 @@ for gpu in gpus:
 
 def create_model(input_shape):
     model = Sequential()
+    model.add(Masking(mask_value=-1, input_shape=input_shape))
     model.add(LSTM(50, input_shape=input_shape))
-    model.add(Dense(1))
-    model.compile(loss='mae', optimizer='adam')
+    model.add(Dense(1)) 
+    model.compile(loss='mae', optimizer='adam') 
     return model
 
 
@@ -70,20 +71,21 @@ def main(args):
     test_csv_path = args.test_csv_path
     chunks = os.listdir(data_root)
     
-    model = create_model((1, 3))
+    model = create_model((15596, 3))
     model.summary()
     try:
         dot = model_to_dot(model, show_shapes=True)
         dot.write_raw('LSTM.dot')
-        plot_model(model, to_file='LSTM.eps', show_shapes=True)
-    except Exception as e:
-        print(str(e))
-    for epoch in tqdm(range(epochs)):
-        for chunk in chunks:
-            chunk_path = os.path.join(data_root, chunk)
-            csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
-            for csv in csv_files: print(f'csv file is {csv}')
-                model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
+        plot_model(model, to_file='LSTM.eps', show_shapes=True) 
+    except Exception as e: 
+        print(str(e)) 
+
+    # for epoch in tqdm(range(epochs)): 
+    #    for chunk in chunks:
+    #        chunk_path = os.path.join(data_root, chunk)
+    #        csv_files = filter(lambda f: f.split('.')[-1] == 'csv', os.listdir(chunk_path))
+    #        for csv in csv_files: print(f'csv file is {csv}')
+    #            model = train(model, os.path.join(data_root, chunk, csv), test_csv_path)
     
     model.save('lstm_all_data.h5')
 
