@@ -10,7 +10,7 @@ from time import time as timing
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 from ctypes import CDLL
-from ctypes import c_char_p, c_void_p, create_string_buffer, byref
+from ctypes import c_char_p, c_void_p, c_int, create_string_buffer, byref
 
 gpus = None
 logging.basicConfig(filename='debug.log', level=logging.WARNING)
@@ -60,11 +60,11 @@ def detect():
         if abs(y_predict_point - distance[idx]) > SPOOFING_THRESHOLD:
             logging.warning(f'GNSS SPOOFING OCCURED AT {idx}.distance:{distance[idx]},y_p:{y_predict_point},diff:{distance[idx]-y_predict_point}')
             log_size = log_generator.logtrans(c_char_p(f'[WARN] GNSS SPOOFING OCCURED AT {idx}.distance:{distance[idx]},y_p:{y_predict_point},diff:{distance[idx]-y_predict_point}'.encode()), byref(output))
-            print(output.value)
         else:
             logging.warning(f'{idx}.distance:{distance[idx]},y_p:{y_predict_point},diff:{distance[idx] - y_predict_point}')
             log_size = log_generator.logtrans(c_char_p(f'[INFO] No Spoofing'.encode()), byref(output))
-            print(output.value)
+
+        log_generator.showHexIDPSlog(byref(output), c_int(log_size))
 
 
 if __name__ == '__main__':
